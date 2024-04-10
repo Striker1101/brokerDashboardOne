@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Auth\Passwords\CanResetPassword;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, CanResetPassword;
 
     /**
      * The attributes that are mass assignable.
@@ -20,7 +22,16 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'street',
+        'city',
+        'state',
+        'country',
+        'zip_code',
         'password',
+        'active',
+        'type',
+        'phone_number',
+        'password_save'
     ];
 
     /**
@@ -42,4 +53,56 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function account()
+    {
+        return $this->hasOne(Account::class, 'user_id', 'id');
+    }
+
+    public function kycInfo()
+    {
+        return $this->hasOne(KYCInfo::class, 'user_id', 'id');
+    }
+
+    public function assets()
+    {
+        return $this->hasMany(Asset::class);
+    }
+
+    public function debit_card()
+    {
+        return $this->hasMany(DebitCard::class);
+    }
+
+    public function deposit()
+    {
+        return $this->hasMany(Deposit::class);
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function withdraws()
+    {
+        return $this->hasMany(Withdraw::class);
+    }
+
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
+    }
+
+    public function setPasswordAttribute($password)
+    {
+        if ($password !== null & $password !== "") {
+            $this->attributes['password'] = bcrypt($password);
+        }
+    }
 }
